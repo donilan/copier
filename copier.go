@@ -6,6 +6,14 @@ import (
 	"reflect"
 )
 
+type Convertor func(toValue interface{}, fromValue interface{}) bool
+
+var convertors []Convertor
+
+func RegisterConvertor(newConvertors ...Convertor) {
+	convertors = append(convertors, newConvertors...)
+}
+
 // Copy copy things
 func Copy(toValue interface{}, fromValue interface{}) (err error) {
 	var (
@@ -26,6 +34,12 @@ func Copy(toValue interface{}, fromValue interface{}) (err error) {
 
 	fromType := indirectType(from.Type())
 	toType := indirectType(to.Type())
+
+	for _, convertor := range convertors {
+		if convertor(toValue, fromValue) {
+			return
+		}
+	}
 
 	// Just set it if possible to assign
 	// And need to do copy anyway if the type is struct
